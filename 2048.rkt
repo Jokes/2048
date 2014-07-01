@@ -24,18 +24,34 @@
       (let ([e (list-ref empties (random (length empties)))])
         (pset e 2))))
 
+(define (slidepush p slider)
+  (let ([p1 (slider p)])
+    (if (or (< (Pos-x p1) 0) (>= (Pos-x p1) board-size)
+            (< (Pos-y p1) 0) (>= (Pos-y p1) board-size)
+            (> (pget p1) 0))
+        p
+        (slidepush p1 slider))))
+
 (define (slide d)
   (let ([travers (match d
                    ['up (drop board-list 1)]
                    ['down (drop (reverse board-list) 1)]
                    ['left (map (λ (bl) (drop bl 1)) board-list)]
-                   ['right (map (λ (bl) (drop (reverse bl) 1)) board-list)])])
-    (map
-     (λ (r)
-       (map
-        (λ (p)
-          (error))
-        r))
+                   ['right (map (λ (bl) (drop (reverse bl) 1)) board-list)])]
+        [slider (match d
+                  ['up (λ (p) (Pos (Pos-x p) (sub1 (Pos-y p))))]
+                  ['down (λ (p) (Pos (Pos-x p) (add1 (Pos-y p))))]
+                  ['left (λ (p) (Pos (sub1 (Pos-x p)) (Pos-y p)))]
+                  ['right (λ (p) (Pos (add1 (Pos-x p)) (Pos-y p)))])])
+    (map 
+     (λ (r) 
+       (map 
+        (λ (p) 
+          (let ([pn (slidepush p slider)])
+            (when (not (equal? pn p))
+              (pset pn (pget p))
+              (pset p 0))))
+        r)) 
      travers)))
 
 (define (shift d)
@@ -45,15 +61,15 @@
                    ['up (drop-right board-list 1)]
                    ['down (drop-right (reverse board-list) 1)]
                    ['left (map (λ (bl) (drop-right bl 1)) board-list)]
-                   ['right (map (λ (bl) (drop-right (reverse bl) 1)) board-list)])])
+                   ['right (map (λ (bl) (drop-right (reverse bl) 1)) board-list)])]
+        [scouter (match d
+                   ['up (λ (p) (Pos (Pos-x p) (add1 (Pos-y p))))]
+                   ['down (λ (p) (Pos (Pos-x p) (sub1 (Pos-y p))))]
+                   ['left (λ (p) (Pos (add1 (Pos-x p)) (Pos-y p)))]
+                   ['right (λ (p) (Pos (sub1 (Pos-x p)) (Pos-y p)))])])
     (map (λ (r)
            (map (λ (p)
-                  (let* ([p1 (match d
-                               ['up (Pos (Pos-x p) (add1 (Pos-y p)))]
-                               ['down (Pos (Pos-x p) (sub1 (Pos-y p)))]
-                               ['left (Pos (add1 (Pos-x p)) (Pos-y p))]
-                               ['right (Pos (sub1 (Pos-x p)) (Pos-y p))]
-                               )]
+                  (let* ([p1 (scouter p)]
                          [pv (pget p)]
                          [p1v (pget p1)])
                     (when (and (not (zero? pv)) (equal? pv p1v))
@@ -139,7 +155,7 @@
     (define/override (on-char ch)
       (let ([k (send ch get-key-code)])
         (when (member k '(up down left right))
-          
+          (shift k)
           (spawn)))
       (send canvas refresh))
     (super-new)))
