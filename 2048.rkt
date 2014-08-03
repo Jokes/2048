@@ -171,10 +171,10 @@
 (define canvas (new my-canvas% [parent canvas-p]
                     [paint-callback (λ (canvas dc) (draw-grid dc))]))
 
-#;(spawn)
-(define next-power
+(spawn)
+#|(define next-power
   (let ([p 1])
     (λ () (set! p (* 2 p))
       p)))
-(for-each (λ (p) (pset p (next-power))) (apply append board-list))
+(for-each (λ (p) (pset p (next-power))) (apply append board-list))|#
 (send frame show #t)
