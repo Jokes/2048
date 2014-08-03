@@ -20,7 +20,7 @@
 
 (define (spawn) 
   (if (empty? empties)
-      (displayln "Game over")
+      (displayln "Game over") ; turn this into an actual check
       (let ([e (list-ref empties (random (length empties)))])
         (pset e 2))))
 
@@ -89,12 +89,20 @@
         (hash-set! colours n c)
         c)))
 
+(define (wrapmod n m)
+  (abs (- (modulo n (- (* 2 m) 2)) m -1)))
 (define (clr n)
+  #;(let* ([l2n (inexact->exact (round (/ (log n) (log 2))))]
+           [flr 64] [cei (- 256 16 flr)]
+           [r (+ flr (modulo (* l2n 89) cei))] 
+           [g (+ flr (modulo (* l2n 11) cei))] 
+           [b (+ flr (modulo (* l2n 19) cei))])
+      (make-color r g b))
   (let* ([l2n (inexact->exact (round (/ (log n) (log 2))))]
-         [flr 64] [cei (- 256 16 flr)]
-         [r (+ flr (modulo (* l2n 89) cei))] 
-         [g (+ flr (modulo (* l2n 11) cei))] 
-         [b (+ flr (modulo (* l2n 19) cei))])
+         [flr 127] [cei (- 256 32 flr)]
+         [r (+ flr (wrapmod (* l2n 21) cei))] 
+         [g (+ flr (- cei (wrapmod (* l2n 13) cei)))] 
+         [b (+ flr (wrapmod (* l2n 7) cei))])
     (make-color r g b)))
 
 ; DRAW
@@ -144,7 +152,7 @@
     ))
 
 ; FRAME
-(define frame (new frame% [label "2048"] [width 600] [height 800]))
+(define frame (new frame% [label "2048"] [width 900] [height 920]))
 (define canvas-p (new vertical-panel% [parent frame] [alignment '(center center)]))
 (define horizon (new horizontal-panel% [parent canvas-p] [alignment '(center center)]
                      [stretchable-height #f]))
@@ -163,10 +171,10 @@
 (define canvas (new my-canvas% [parent canvas-p]
                     [paint-callback (λ (canvas dc) (draw-grid dc))]))
 
-(spawn)
-#|(define next-power
+#;(spawn)
+(define next-power
   (let ([p 1])
     (λ () (set! p (* 2 p))
       p)))
-(for-each (λ (p) (pset p (next-power))) (apply append board-list))|#
+(for-each (λ (p) (pset p (next-power))) (apply append board-list))
 (send frame show #t)
